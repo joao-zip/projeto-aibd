@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRUD Redis Web</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      h1,
+      h2 {
+        color: #333;
+      }
+      .container {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .section {
+        border: 1px solid #ccc;
+        padding: 15px;
+        border-radius: 8px;
+        flex: 1;
+        min-width: 300px;
+      }
+      input[type="text"],
+      input[type="submit"],
+      button {
+        padding: 8px;
+        margin: 5px 0;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
+      input[type="submit"],
+      button {
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+      }
+      input[type="submit"]:hover,
+      button:hover {
+        background-color: #0056b3;
+      }
+      .item-list {
+        list-style: none;
+        padding: 0;
+      }
+      .item-list li {
+        background-color: #f9f9f9;
+        margin-bottom: 5px;
+        padding: 10px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .item-list button {
+        background-color: #dc3545;
+        margin-left: 10px;
+      }
+      .item-list button:hover {
+        background-color: #c82333;
+      }
+      .update-btn {
+        background-color: #ffc107;
+        color: #333;
+      }
+      .update-btn:hover {
+        background-color: #e0a800;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>CRUD Redis Web</h1>
+
+    <div class="container">
+      <div class="section">
+        <h2>Criar/Atualizar Item</h2>
+        <form id="createUpdateForm">
+          <label for="key">Chave:</label><br />
+          <input type="text" id="key" name="key" required /><br />
+          <label for="value">Valor:</label><br />
+          <input type="text" id="value" name="value" required /><br />
+          <input type="submit" value="Salvar Item" />
+        </form>
+      </div>
+
+      <div class="section">
+        <h2>Buscar Item</h2>
+        <form id="readForm">
+          <label for="readKey">Chave:</label><br />
+          <input type="text" id="readKey" name="readKey" required /><br />
+          <button type="submit">Buscar</button>
+        </form>
+        <p>Resultado: <span id="readResult"></span></p>
+      </div>
+
+      <div class="section">
+        <h2>Deletar Item</h2>
+        <form id="deleteForm">
+          <label for="deleteKey">Chave:</label><br />
+          <input type="text" id="deleteKey" name="deleteKey" required /><br />
+          <button type="submit">Deletar</button>
+        </form>
+      </div>
+    </div>
+
+    <hr />
+
+    <h2>Todos os Itens</h2>
+    <button onclick="fetchAllItems()">Atualizar Lista</button>
+    <ul id="itemList" class="item-list"></ul>
+
+    <script>
+      document
+        .getElementById("createUpdateForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const key = document.getElementById("key").value;
+          const value = document.getElementById("value").value;
+
+          try {
+            // Tenta buscar o item primeiro para decidir se é POST (criar) ou PUT (atualizar)
+            const checkResponse = await fetch(`/item/${key}`);
+            const exists = checkResponse.ok; // True se o status for 200-299
+
+            let response;
+            if (exists) {
+              // Item existe, faz PUT para atualizar
+              response = await fetch(`/item/${key}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ value: value }),
+              });
+            } else {
+              // Item não existe, faz POST para criar
+              response = await fetch("/item", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ key: key, value: value }),
+              });
+            }
+
+            if (response.ok) {
+              alert("Operação realizada com sucesso!");
+              document.getElementById("key").value = "";
+              document.getElementById("value").value = "";
+              fetchAllItems(); // Atualiza a lista após a operação
+            } else {
+              const message = await response.text();
+              alert("Erro: " + message);
+            }
+          } catch (error) {
+            console.error("Erro na requisição:", error);
+            alert("Erro na comunicação com o servidor.");
+          }
+        });
+
+      document
+        .getElementById("readForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const key = document.getElementById("readKey").value;
+          const readResult = document.getElementById("readResult");
+          try {
+            const response = await fetch(`/item/${key}`);
+            if (response.ok) {
+              const data = await response.json();
+              readResult.textContent = `Chave: ${data.key}, Valor: ${data.value}`;
+            } else {
+              const message = await response.text();
+              readResult.textContent = "Erro: " + message;
+            }
+          } catch (error) {
+            console.error("Erro na requisição:", error);
+            readResult.textContent = "Erro na comunicação com o servidor.";
+          }
+        });
+
+      document
+        .getElementById("deleteForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const key = document.getElementById("deleteKey").value;
+          try {
+            const response = await fetch(`/item/${key}`, {
+              method: "DELETE",
+            });
+            if (response.ok) {
+              alert("Item deletado com sucesso!");
+              document.getElementById("deleteKey").value = "";
+              fetchAllItems(); // Atualiza a lista após a operação
+            } else {
+              const message = await response.text();
+              alert("Erro: " + message);
+            }
+          } catch (error) {
+            console.error("Erro na requisição:", error);
+            alert("Erro na comunicação com o servidor.");
+          }
+        });
+
+      async function fetchAllItems() {
+        const itemList = document.getElementById("itemList");
+        itemList.innerHTML = "<li>Carregando itens...</li>"; // Limpa e mostra mensagem de carregamento
+        try {
+          const response = await fetch("/items");
+          if (response.ok) {
+            const items = await response.json();
+            itemList.innerHTML = ""; // Limpa antes de adicionar
+            if (Object.keys(items).length === 0) {
+              itemList.innerHTML = "<li>Nenhum item encontrado.</li>";
+            } else {
+              for (const key in items) {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                                <strong>${key}:</strong> ${items[key]}
+                                <div>
+                                    <button class="update-btn" onclick="editItem('${key}', '${items[key]}')">Editar</button>
+                                    <button onclick="deleteItemFromList('${key}')">Deletar</button>
+                                </div>
+                            `;
+                itemList.appendChild(li);
+              }
+            }
+          } else {
+            const message = await response.text();
+            itemList.innerHTML = `<li>Erro ao carregar itens: ${message}</li>`;
+          }
+        } catch (error) {
+          console.error("Erro ao buscar todos os itens:", error);
+          itemList.innerHTML = "<li>Erro ao carregar itens.</li>";
+        }
+      }
+
+      function editItem(key, value) {
+        document.getElementById("key").value = key;
+        document.getElementById("value").value = value;
+        window.scrollTo(0, 0); // Rola para o topo da página para facilitar a edição
+      }
+
+      async function deleteItemFromList(key) {
+        if (
+          confirm(`Tem certeza que deseja deletar o item com a chave "${key}"?`)
+        ) {
+          try {
+            const response = await fetch(`/item/${key}`, {
+              method: "DELETE",
+            });
+            if (response.ok) {
+              alert("Item deletado com sucesso!");
+              fetchAllItems();
+            } else {
+              const message = await response.text();
+              alert("Erro ao deletar: " + message);
+            }
+          } catch (error) {
+            console.error("Erro na requisição:", error);
+            alert("Erro na comunicação com o servidor.");
+          }
+        }
+      }
+
+      // Carrega todos os itens ao carregar a página
+      document.addEventListener("DOMContentLoaded", fetchAllItems);
+    </script>
+  </body>
+</html>
