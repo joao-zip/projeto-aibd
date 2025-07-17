@@ -3,231 +3,231 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CRUD Redis Web</title>
+    <title>Dashboard Redis Avançado</title>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-      }
-      h1,
-      h2 {
-        color: #333;
-      }
-      .container {
-        display: flex;
-        gap: 20px;
-        flex-wrap: wrap;
-      }
-      .section {
-        border: 1px solid #ccc;
-        padding: 15px;
-        border-radius: 8px;
-        flex: 1;
-        min-width: 300px;
-      }
-      input[type="text"],
-      input[type="submit"],
-      button {
-        padding: 8px;
-        margin: 5px 0;
-        border-radius: 4px;
-        border: 1px solid #ddd;
-      }
-      input[type="submit"],
-      button {
-        background-color: #007bff;
-        color: white;
-        cursor: pointer;
-      }
-      input[type="submit"]:hover,
-      button:hover {
-        background-color: #0056b3;
-      }
-      .item-list {
-        list-style: none;
-        padding: 0;
-      }
-      .item-list li {
-        background-color: #f9f9f9;
-        margin-bottom: 5px;
-        padding: 10px;
-        border-radius: 4px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .item-list button {
-        background-color: #dc3545;
-        margin-left: 10px;
-      }
-      .item-list button:hover {
-        background-color: #c82333;
-      }
-      .update-btn {
-        background-color: #ffc107;
-        color: #333;
-      }
-      .update-btn:hover {
-        background-color: #e0a800;
-      }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 20px; background-color: #f0f2f5; color: #1c1e21; }
+      h1, h2 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+      .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+      .section { background-color: #fff; border: 1px solid #dddfe2; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+      input[type="text"], button, input[type="submit"] { width: calc(100% - 22px); padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #dddfe2; font-size: 16px; }
+      button, input[type="submit"] { background-color: #007bff; color: white; cursor: pointer; border: none; font-weight: bold; }
+      button:hover, input[type="submit"]:hover { background-color: #0056b3; }
+      .item-list { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; }
+      .item-list li { background-color: #f9f9f9; margin-bottom: 8px; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; word-break: break-all; }
+      .item-actions button { width: auto; padding: 5px 10px; font-size: 12px; margin-left: 5px; }
+      .delete-btn { background-color: #dc3545; } .delete-btn:hover { background-color: #c82333; }
+      .like-btn { background-color: #28a745; } .like-btn:hover { background-color: #218838; }
+      #readResult, #itemCount { font-weight: bold; color: #007bff; }
+      pre { background-color: #e9ebee; padding: 10px; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; max-height: 150px; overflow-y: auto;}
     </style>
   </head>
   <body>
-    <h1>CRUD Redis Web</h1>
+    <h1>Dashboard Redis Avançado 🚀</h1>
 
-    <div class="container">
+    <div class="grid-container">
       <div class="section">
-        <h2>Criar/Atualizar Item</h2>
+        <h2>Criar / Atualizar Item</h2>
         <form id="createUpdateForm">
-          <label for="key">Chave:</label><br />
-          <input type="text" id="key" name="key" required /><br />
-          <label for="value">Valor:</label><br />
-          <input type="text" id="value" name="value" required /><br />
+          <label for="key">Chave:</label>
+          <input type="text" id="key" name="key" required />
+          <label for="value">Valor:</label>
+          <input type="text" id="value" name="value" required />
+          <label for="tags">Tags (separadas por vírgula):</label>
+          <input type="text" id="tags" name="tags" placeholder="ex: eletronico, promocao" />
           <input type="submit" value="Salvar Item" />
         </form>
       </div>
 
       <div class="section">
-        <h2>Buscar Item</h2>
+        <h2>Consultas Gerais</h2>
+        <button onclick="fetchAllItems()">Listar Todos os Itens</button>
+        <button onclick="fetchItemCount()">Contar Itens</button>
+        <p>Total de Itens: <span id="itemCount">0</span></p>
+        <hr>
+        <h2>Buscar Item Específico</h2>
         <form id="readForm">
-          <label for="readKey">Chave:</label><br />
-          <input type="text" id="readKey" name="readKey" required /><br />
+          <input type="text" id="readKey" placeholder="Digite a chave para buscar" required />
           <button type="submit">Buscar</button>
         </form>
         <p>Resultado: <span id="readResult"></span></p>
       </div>
 
       <div class="section">
-        <h2>Deletar Item</h2>
-        <form id="deleteForm">
-          <label for="deleteKey">Chave:</label><br />
-          <input type="text" id="deleteKey" name="deleteKey" required /><br />
-          <button type="submit">Deletar</button>
+        <h2>Listar Itens por Tag</h2>
+        <form id="tagSearchForm">
+          <input type="text" id="tagSearchKey" placeholder="Digite a tag" required />
+          <button type="submit">Buscar por Tag</button>
         </form>
+        <h3>Resultados da Tag:</h3>
+        <ul id="tagItemList" class="item-list"></ul>
+      </div>
+      
+      <div class="section">
+        <h2>🏆 Ranking de Itens Mais Vistos</h2>
+        <button onclick="fetchLeaderboard()">Atualizar Ranking</button>
+        <ol id="leaderboard" class="item-list"></ol>
+      </div>
+
+      <div class="section">
+        <h2>📜 Logs de Atividade Recente</h2>
+        <button onclick="fetchLogs()">Atualizar Logs</button>
+        <pre id="logData"></pre>
       </div>
     </div>
 
-    <hr />
+    <hr>
 
-    <h2>Todos os Itens</h2>
-    <button onclick="fetchAllItems()">Atualizar Lista</button>
+    <h2>Todos os Itens no Banco</h2>
     <ul id="itemList" class="item-list"></ul>
 
     <script>
-      document
-        .getElementById("createUpdateForm")
-        .addEventListener("submit", async function (event) {
-          event.preventDefault();
-          const key = document.getElementById("key").value;
-          const value = document.getElementById("value").value;
+      const API_BASE_URL = window.location.origin;
 
-          try {
-            // Tenta buscar o item primeiro para decidir se é POST (criar) ou PUT (atualizar)
-            const checkResponse = await fetch(`/item/${key}`);
-            const exists = checkResponse.ok; // True se o status for 200-299
-
-            let response;
-            if (exists) {
-              // Item existe, faz PUT para atualizar
-              response = await fetch(`/item/${key}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ value: value }),
-              });
-            } else {
-              // Item não existe, faz POST para criar
-              response = await fetch("/item", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ key: key, value: value }),
-              });
-            }
-
-            if (response.ok) {
-              alert("Operação realizada com sucesso!");
-              document.getElementById("key").value = "";
-              document.getElementById("value").value = "";
-              fetchAllItems(); // Atualiza a lista após a operação
-            } else {
-              const message = await response.text();
-              alert("Erro: " + message);
-            }
-          } catch (error) {
-            console.error("Erro na requisição:", error);
-            alert("Erro na comunicação com o servidor.");
-          }
-        });
-
-      document
-        .getElementById("readForm")
-        .addEventListener("submit", async function (event) {
-          event.preventDefault();
-          const key = document.getElementById("readKey").value;
-          const readResult = document.getElementById("readResult");
-          try {
-            const response = await fetch(`/item/${key}`);
-            if (response.ok) {
-              const data = await response.json();
-              readResult.textContent = `Chave: ${data.key}, Valor: ${data.value}`;
-            } else {
-              const message = await response.text();
-              readResult.textContent = "Erro: " + message;
-            }
-          } catch (error) {
-            console.error("Erro na requisição:", error);
-            readResult.textContent = "Erro na comunicação com o servidor.";
-          }
-        });
-
-      document
-        .getElementById("deleteForm")
-        .addEventListener("submit", async function (event) {
-          event.preventDefault();
-          const key = document.getElementById("deleteKey").value;
-          try {
-            const response = await fetch(`/item/${key}`, {
-              method: "DELETE",
-            });
-            if (response.ok) {
-              alert("Item deletado com sucesso!");
-              document.getElementById("deleteKey").value = "";
-              fetchAllItems(); // Atualiza a lista após a operação
-            } else {
-              const message = await response.text();
-              alert("Erro: " + message);
-            }
-          } catch (error) {
-            console.error("Erro na requisição:", error);
-            alert("Erro na comunicação com o servidor.");
-          }
-        });
-
-      async function fetchAllItems() {
-        const itemList = document.getElementById("itemList");
-        itemList.innerHTML = "<li>Carregando itens...</li>"; // Limpa e mostra mensagem de carregamento
+      // --- Lógica do Formulário Principal (Criar/Atualizar) ---
+      document.getElementById("createUpdateForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const key = document.getElementById("key").value;
+        const value = document.getElementById("value").value;
+        const tags = document.getElementById("tags").value;
+        
         try {
-          const response = await fetch("/items");
+          const existsResponse = await fetch(`${API_BASE_URL}/item/${key}`);
+          const method = existsResponse.ok ? 'PUT' : 'POST';
+          const url = method === 'PUT' ? `${API_BASE_URL}/item/${key}` : `${API_BASE_URL}/item`;
+          
+          const body = { key: key, value: value, tags: tags };
+
+          const response = await fetch(url, {
+            method: method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+
+          const message = await response.text();
+          alert(message);
           if (response.ok) {
-            const items = await response.json();
-            itemList.innerHTML = ""; // Limpa antes de adicionar
-            if (Object.keys(items).length === 0) {
-              itemList.innerHTML = "<li>Nenhum item encontrado.</li>";
+            document.getElementById("createUpdateForm").reset();
+            fetchAllItems();
+            fetchItemCount();
+          }
+        } catch (error) {
+          console.error("Erro no formulário principal:", error);
+          alert("Erro de comunicação com o servidor.");
+        }
+      });
+
+      // --- Lógica para buscar um item ---
+      document.getElementById("readForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const key = document.getElementById("readKey").value;
+        const resultSpan = document.getElementById("readResult");
+        try {
+          const response = await fetch(`${API_BASE_URL}/item/${key}`);
+          if (response.ok) {
+            const data = await response.json();
+            resultSpan.textContent = `Valor: ${data.value}`;
+            // Ao buscar, o contador de views aumenta, então atualizamos o leaderboard
+            fetchLeaderboard();
+          } else {
+            resultSpan.textContent = await response.text();
+          }
+        } catch (error) {
+          console.error("Erro ao buscar item:", error);
+          resultSpan.textContent = "Erro de comunicação.";
+        }
+      });
+
+      // --- Funções para as Novas Consultas ---
+
+      async function fetchItemCount() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/items/count`);
+          const data = await response.json();
+          document.getElementById("itemCount").textContent = data.totalItems;
+        } catch (error) {
+          console.error("Erro ao contar itens:", error);
+        }
+      }
+
+      async function fetchLogs() {
+        const logData = document.getElementById("logData");
+        logData.textContent = 'Carregando...';
+        try {
+          const response = await fetch(`${API_BASE_URL}/logs`);
+          const logs = await response.json();
+          logData.textContent = logs.join('\n');
+        } catch (error) {
+          console.error("Erro ao buscar logs:", error);
+          logData.textContent = "Erro ao carregar logs.";
+        }
+      }
+      
+      async function fetchLeaderboard() {
+        const list = document.getElementById("leaderboard");
+        list.innerHTML = "<li>Carregando...</li>";
+        try {
+          const response = await fetch(`${API_BASE_URL}/leaderboard`);
+          const data = await response.json();
+          list.innerHTML = "";
+          if (data.length === 0) list.innerHTML = "<li>Nenhum item visualizado.</li>";
+          data.forEach(item => {
+            const li = document.createElement("li");
+            li.textContent = `${item.itemKey} - ${item.views} visualizações`;
+            list.appendChild(li);
+          });
+        } catch (error) {
+            console.error("Erro ao buscar leaderboard:", error);
+            list.innerHTML = "<li>Erro ao carregar.</li>";
+        }
+      }
+
+      document.getElementById("tagSearchForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const tag = document.getElementById("tagSearchKey").value;
+        const list = document.getElementById("tagItemList");
+        list.innerHTML = "<li>Buscando...</li>";
+        try {
+            const response = await fetch(`${API_BASE_URL}/items/tag/${tag}`);
+            const data = await response.json();
+            list.innerHTML = "";
+             if (Object.keys(data).length === 0) {
+              list.innerHTML = "<li>Nenhum item com esta tag.</li>";
             } else {
-              for (const key in items) {
-                const li = document.createElement("li");
-                li.innerHTML = `
-                                <strong>${key}:</strong> ${items[key]}
-                                <div>
-                                    <button class="update-btn" onclick="editItem('${key}', '${items[key]}')">Editar</button>
-                                    <button onclick="deleteItemFromList('${key}')">Deletar</button>
-                                </div>
-                            `;
-                itemList.appendChild(li);
+              for(const key in data) {
+                  const li = document.createElement("li");
+                  li.textContent = `${key}: ${data[key]}`;
+                  list.appendChild(li);
               }
             }
+        } catch (error) {
+            console.error("Erro ao buscar por tag:", error);
+            list.innerHTML = "<li>Erro na busca.</li>";
+        }
+      });
+
+      // --- Funções para a Lista Principal de Itens (com likes) ---
+      
+      async function fetchAllItems() {
+        const itemList = document.getElementById("itemList");
+        itemList.innerHTML = "<li>Carregando...</li>";
+        try {
+          const response = await fetch(`${API_BASE_URL}/items`);
+          const items = await response.json();
+          itemList.innerHTML = "";
+          if (Object.keys(items).length === 0) {
+            itemList.innerHTML = "<li>Nenhum item cadastrado.</li>";
           } else {
-            const message = await response.text();
-            itemList.innerHTML = `<li>Erro ao carregar itens: ${message}</li>`;
+            for (const key in items) {
+              const li = document.createElement("li");
+              li.innerHTML = `
+                <span><strong>${key}:</strong> ${items[key]}</span>
+                <div class="item-actions">
+                  <button class="like-btn" onclick="likeItem('${key}')">Like ❤️</button>
+                  <button class="delete-btn" onclick="deleteItem('${key}')">Deletar</button>
+                </div>
+              `;
+              itemList.appendChild(li);
+            }
           }
         } catch (error) {
           console.error("Erro ao buscar todos os itens:", error);
@@ -235,36 +235,40 @@
         }
       }
 
-      function editItem(key, value) {
-        document.getElementById("key").value = key;
-        document.getElementById("value").value = value;
-        window.scrollTo(0, 0); // Rola para o topo da página para facilitar a edição
+      async function likeItem(key) {
+        try {
+          await fetch(`${API_BASE_URL}/item/${key}/like`, { method: 'POST' });
+          alert(`Like adicionado ao item: ${key}`);
+          // Opcional: atualizar a lista para mostrar a contagem de likes, mas pode deixar mais lento
+        } catch (error) {
+          console.error("Erro ao dar like:", error);
+        }
       }
-
-      async function deleteItemFromList(key) {
-        if (
-          confirm(`Tem certeza que deseja deletar o item com a chave "${key}"?`)
-        ) {
+      
+      async function deleteItem(key) {
+        if (confirm(`Tem certeza que deseja deletar o item "${key}"?`)) {
           try {
-            const response = await fetch(`/item/${key}`, {
-              method: "DELETE",
-            });
+            const response = await fetch(`${API_BASE_URL}/item/${key}`, { method: 'DELETE' });
             if (response.ok) {
-              alert("Item deletado com sucesso!");
+              alert(await response.text());
               fetchAllItems();
+              fetchItemCount();
             } else {
-              const message = await response.text();
-              alert("Erro ao deletar: " + message);
+              alert("Erro ao deletar item.");
             }
           } catch (error) {
-            console.error("Erro na requisição:", error);
-            alert("Erro na comunicação com o servidor.");
+            console.error("Erro ao deletar:", error);
           }
         }
       }
 
-      // Carrega todos os itens ao carregar a página
-      document.addEventListener("DOMContentLoaded", fetchAllItems);
+      // --- Carregamento Inicial ---
+      document.addEventListener("DOMContentLoaded", () => {
+        fetchAllItems();
+        fetchItemCount();
+        fetchLeaderboard();
+        fetchLogs();
+      });
     </script>
   </body>
 </html>
